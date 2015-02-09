@@ -13,31 +13,34 @@ def bestxy(emislat,emislon,lat,lon):
             besty = y
    return bestx,besty
 
-#def readReanalysis(keyword,year,lat,lon,t):
-keyword = "prmsl"
-year = 2013
-lat = 40.587773
-lon = -105.147914
-startDate = datetime.datetime(2013, 1, 1, 0, 0)
-endDate = datetime.datetime(2013, 1, 31, 23, 0)
-t = reanalysisTime(startDate,endDate)
-infile=Dataset('%s.%s.nc' % (keyword,year),'r',format='NETCDF4')
+def readReanalysis(fname,keyword,year,lat,lon,t):
 
-ncTime=infile.variables["time"][:]
-ncLat=infile.variables["lat"][:]
-ncLon=infile.variables["lon"][:]
-ncKeyword=infile.variables[keyword][:]
-infile.close()
+   infile=Dataset('%s.%s.nc' % (fname,year),'r',format='NETCDF4')
 
-bestx,besty = bestxy(lat,lon,ncLat,ncLon)
-ncKeyword = ncKeyword[:,besty-1:besty+2,bestx-1:bestx+2]
-ncLat = ncLat[besty-1:besty+2,bestx-1:bestx+2]
-ncLon = ncLon[besty-1:besty+2,bestx-1:bestx+2]
+   ncTime=infile.variables["time"][:]
+   ncLat=infile.variables["lat"][:]
+   ncLon=infile.variables["lon"][:]
+   ncKeyword=infile.variables[keyword][:]
+   infile.close()
 
-from scipy.interpolate import LinearNDInterpolator, griddata
+   if ncTime[0] < 1e7:
+      tWanted = t.hoursSince1800()
+   else:
+      tWanted = t.hoursSince0001()
 
-xi = np.linspace(ncLon.min(),ncLon.max(),3)
-yi = np.linspace(ncLat.min(),ncLat.max(),3)
+   bestx,besty = bestxy(lat,lon,ncLat,ncLon)
+   ncKeyword = ncKeyword[:,besty-1:besty+2,bestx-1:bestx+2]
+   ncLat = ncLat[besty-1:besty+2,bestx-1:bestx+2]
+   ncLon = ncLon[besty-1:besty+2,bestx-1:bestx+2]
 
-zi = griddata((ncTime,ncLat.flatten(),ncLon.flatten()),ncKeyword.flatten(),(ncTime,yi,xi))
-#f = LinearNDInterpolator((ncTime.flatten(),ncLat.flatten(),ncLon.flatten()),ncKeyword)
+   from scipy.interpolate import LinearNDInterpolator, griddata, interp1d
+   data = np.zeros_like(ncTime)
+
+   for i in range(len(ncTime)):
+      f = LinearNDInterpolator((ncLat.flatten(),ncLon.flatten()),ncKeyword[i].flatten())
+      data[i] = f(lat,lon)
+
+   f2 = interp1d(ncTime,data)
+
+   del ncKeyword, ncTime,ncLat,ncLon
+   return f2(tWanted)
