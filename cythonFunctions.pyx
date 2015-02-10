@@ -9,3 +9,9 @@ def bestxy(emislat,emislon,lat,lon):
             bestx = x
             besty = y
    return bestx,besty
+
+
+def returnNetCDF(file):
+    from netCDF4 import Dataset
+
+    return 1
