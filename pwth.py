@@ -127,25 +127,42 @@ def pwth(precip,temperature):
     99          unknown
     '''
     
-    weather = np.zeros((2))
-    if precip > 0. and precip < 2.:
-        if temperature >273.15:
-            weather[0]=20
-        else:
-            weather[1]=40
+    weather = np.zeros((2,len(precip)))
 
-    elif precip >= 2. and precip < 10.:
-        if temperature > 273.15:
-            weather[0] = 21
-        else:
-            weather[1] = 41
+    weather[0,np.where((precip > 0.) & (precip < 2.)) & (temperature > 273.15)] = 20
+    weather[1,np.where((precip > 0.) & (precip < 2.)) & (temperature < 273.15)] = 40
 
 
-    elif precip >=10.:
-        if temperature > 273.15:
-            weather[0] = 22
-        else:
-            weather[1] = 42
+    weather[0,np.where((precip >= 2.) & (precip < 10.)) & (temperature > 273.15)] = 21
+    weather[1,np.where((precip >= 2.) & (precip < 10.)) & (temperature < 273.15)] = 41
 
+    weather[0,np.where((precip >= 10.) & (temperature > 273.15))] = 22
+    weather[1,np.where((precip >= 10.) & (temperature < 273.15))] = 42
+
+
+    # if precip > 0. and precip < 2.:
+    #     if temperature >273.15:
+    #         weather[0]=20
+    #     else:
+    #         weather[1]=40
+
+    # elif precip >= 2. and precip < 10.:
+    #     if temperature > 273.15:
+    #         weather[0] = 21
+    #     else:
+    #         weather[1] = 41
+
+
+    # elif precip >=10.:
+    #     if temperature > 273.15:
+    #         weather[0] = 22
+    #     else:
+    #         weather[1] = 42
+
+    weatherString = zeros_like(weather,dtype=str)
+
+    for i in range(len(precip)):
+        weatherString[i] = '0%02d%02d' % (weather[0,i],weather[1,i])
+            
 
     return weather

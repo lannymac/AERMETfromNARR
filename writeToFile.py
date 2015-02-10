@@ -1,7 +1,12 @@
 import datetime
 import numpy as np
 
-def writeSfcFile(fname,lat,lon,t,slp,pres,lcb,tcdc, lcdc,C2,C3,CLC,CLT,PWTH,vis,sfcTemp,wetBulb,dewPoint,rh,windDir,windSpeed,precip):
+def writeSfcFile(fname,lat,lon,t,slp,pres,lcb,tcdc, lcdc,CLC,CLT,PWTH,vis,sfcTemp,wetBulb,dewPoint,rh,windDir,windSpeed,precip):
+
+    # assume sky cover, 2//3 layers (tenths//tenths)
+    C2 = 99
+    C3=  99
+
     f = open('%s.OQA' % (fname),'w')
     f.write('*    AERMET Version  13350\n')
     f.write('*% SURFACE\n')

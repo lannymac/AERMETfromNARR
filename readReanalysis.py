@@ -16,6 +16,15 @@ from cythonFunctions import bestxy
 #             besty = y
 #    return bestx,besty
 
+'''
+The two functions in this file are meant to read in NARR data
+and linear interpolate it to the time, latitude and longitude
+that we want.
+
+I realize that this code is current very inefficient. I am working
+hard to make it run much faster.
+'''
+
 def readSfcReanalysis(fname,keyword,year,lat,lon,t):
 
    infile=Dataset('ncFiles/%s.%s.nc' % (fname,year),'r',format='NETCDF4')
