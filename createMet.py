@@ -16,7 +16,6 @@ lat,lon,t = readSiteConfig('met.cfg')
 doSfc, SfcFname, doUpper, upperFname = readAERMODConfig('met.cfg')
 
 if doSfc:
-
     # Download the appropriate met files
     downloadYears = np.arange(t.startDate.year,t.endDate.year+1,1)
 
@@ -116,6 +115,7 @@ if doSfc:
         PWTH_file[i] = '0%02d%02d' % (tmp[0],tmp[1])
 
     writeSfcFile(SfcFname,lat,lon,t,slp,pres,lcb,tcdc,lcdc,C2,C3,CLC,CLT,PWTH_file,vis,sfcTemp,wetBulb,dewPoint,rh,windDir,windSpeed,precip)
+    end = start - time.time()
 
 
 from dateutil.relativedelta import relativedelta
