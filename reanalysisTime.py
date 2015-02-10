@@ -1,6 +1,6 @@
 import datetime
 import numpy as np
-
+import pandas as pd
 class reanalysisTime:
     def __init__(self,startDate,endDate):
         self.startDate = startDate
@@ -32,3 +32,4 @@ class reanalysisTime:
     def timeSpaceArray(self):
 
         return np.arange(self.startDate,self.endDate,datetime.timedelta(hours=1))
+
