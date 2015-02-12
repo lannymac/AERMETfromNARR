@@ -1,6 +1,8 @@
 import datetime
 import numpy as np
 import pandas as pd
+   
+from dateutil.relativedelta import relativedelta
 class reanalysisTime:
     def __init__(self,startDate,endDate):
         self.startDate = startDate
@@ -31,5 +33,36 @@ class reanalysisTime:
 
     def timeSpaceArray(self):
 
-        return np.arange(self.startDate,self.endDate,datetime.timedelta(hours=1))
+        return np.arange(self.startDate,self.endDate+datetime.timedelta(hours=1),datetime.timedelta(hours=1))
 
+
+    def timeSpaceList(self):
+        curr =  self.startDate
+        l= [curr]
+        i=0
+        while curr < self.endDate:
+            curr = curr + datetime.timedelta(hours=1)
+            l.append(curr)
+        return l
+
+
+    def monthsYears(self,surround=False):
+        times = self.timeSpaceList()
+        months = [times[0].month]
+        years = [times[0].year]        
+        for i in range(1,len(times)):
+
+            if months[-1] == times[i].month:
+                pass
+            else:
+                months.append(times[i].month)
+                years.append(times[i].year)
+        if surround:
+
+            months.insert(0,(times[0]-relativedelta(months=1)).month)
+            years.insert(0,(times[0]-relativedelta(months=1)).year)
+
+            months.append((times[-1]+relativedelta(months=1)).month)
+            years.append((times[-1]+relativedelta(months=1)).year)
+        return months,years
+        

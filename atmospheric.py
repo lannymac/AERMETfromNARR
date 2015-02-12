@@ -2,7 +2,7 @@ import numpy as np
 
 def barometric(p0,pz):
    H = 7400. #m
-   return abs(np.log(pz/p0)*H)
+   return -np.log(pz/p0)*H
 
 
 def Td(T,RH):
@@ -26,5 +26,16 @@ def Tw(T,RH):
 
    return a+b+c+d+e
 
+def murphy(T):
+   A=54.842763 - 6763.22/T - 4.210*np.log(T)+.000367*T
+   B=np.tanh(.0415*(T-218.8))*(53.878 - 1331.22/T - 9.44526*np.log(T)+.014025*T)
+   return np.exp(A+B)
+
+def sh2rh(SH,T,pLevels):
+   w = SH/(1-SH)
+   e = w*pLevels/(w+0.622)
+   es = murphy(T)
+   RH= e/es*100
+   return RH 
 
 

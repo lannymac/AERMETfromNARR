@@ -1,5 +1,5 @@
 import numpy as np
-def cloudTypes(lcf,mcf,hcf,lcb,mcb,hcb),:
+def cloudTypes(lcf,mcf,hcf,lcb,mcb,hcb):
     '''
     THIS DEFINITION WILL ESTIMATE THE CLOUD TYPE
     DESCRIBED BELOW:
@@ -58,7 +58,7 @@ def cloudTypes(lcf,mcf,hcf,lcb,mcb,hcb),:
     #     clouds[2]=37
 
 
-    cloudsString = np.zeros_like(clouds,dtype=str)
+    cloudsString = np.zeros_like(clouds,dtype='|S5')
     for i in range(len(lcf)):
         if np.isnan(lcb[i]):
             cloudsString[0,i] = '09999'

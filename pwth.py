@@ -129,12 +129,12 @@ def pwth(precip,temperature):
     
     weather = np.zeros((2,len(precip)))
 
-    weather[0,np.where((precip > 0.) & (precip < 2.)) & (temperature > 273.15)] = 20
-    weather[1,np.where((precip > 0.) & (precip < 2.)) & (temperature < 273.15)] = 40
+    weather[0,np.where((precip > 0.) & (precip < 2.) & (temperature > 273.15))] = 20
+    weather[1,np.where((precip > 0.) & (precip < 2.) & (temperature < 273.15))] = 40
 
 
-    weather[0,np.where((precip >= 2.) & (precip < 10.)) & (temperature > 273.15)] = 21
-    weather[1,np.where((precip >= 2.) & (precip < 10.)) & (temperature < 273.15)] = 41
+    weather[0,np.where((precip >= 2.) & (precip < 10.) & (temperature > 273.15))] = 21
+    weather[1,np.where((precip >= 2.) & (precip < 10.) & (temperature < 273.15))] = 41
 
     weather[0,np.where((precip >= 10.) & (temperature > 273.15))] = 22
     weather[1,np.where((precip >= 10.) & (temperature < 273.15))] = 42
@@ -159,10 +159,10 @@ def pwth(precip,temperature):
     #     else:
     #         weather[1] = 42
 
-    weatherString = zeros_like(weather,dtype=str)
+    weatherString = np.zeros_like(precip,dtype='|S5')
 
     for i in range(len(precip)):
-        weatherString[i] = '0%02d%02d' % (weather[0,i],weather[1,i])
+        weatherString[i]='0%02d%02d' % (weather[0,i],weather[1,i])
             
 
-    return weather
+    return weatherString

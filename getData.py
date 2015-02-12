@@ -39,20 +39,22 @@ def downloadSfcNARR(year,flag = 'nc'):
     os.system("wget -%s %s/monolevel/vis.%s.nc -P ncFiles/" % (flag,narrURL,year))
 
 
-def downloadUpperNARR(year,month,flag = 'nc'):
+def downloadUpperNARR(year,month,flag = 'nc',fname = None):
+
+    if fname == None:
+        # get the sea level pressure data
+        os.system("wget -%s %s/monolevel/pres.sfc.%s.nc -P ncFiles/" % (flag,narrURL,year))
 
 
-    # get the sea level pressure data
-    os.system("wget -%s %s/monolevel/pres.sfc.%s.nc -P ncFiles/" % (flag,narrURL,year))
+        #os.system('wget '+cl+' '+narrurl+'pressure/air.'+yrstr+'.'+i+'.nc')
+        os.system('wget -%s %s/pressure/air.%s%02d.nc -P ncFiles/' % (flag,narrURL,year,month))
 
+        # get upper U and V wind
+        os.system('wget -%s %s/pressure/uwnd.%s%02d.nc -P ncFiles/' % (flag,narrURL,year,month))
+        os.system('wget -%s %s/pressure/vwnd.%s%02d.nc -P ncFiles/' % (flag,narrURL,year,month))
 
-    #os.system('wget '+cl+' '+narrurl+'pressure/air.'+yrstr+'.'+i+'.nc')
-    os.system('wget -%s %s/pressure/air.%s%02d.nc -P ncFiles/' % (flag,narrURL,year,month))
-    
-    # get upper U and V wind
-    os.system('wget -%s %s/pressure/uwnd.%s%02d.nc -P ncFiles/' % (flag,narrURL,year,month))
-    os.system('wget -%s %s/pressure/vwnd.%s%02d.nc -P ncFiles/' % (flag,narrURL,year,month))
+        # get upper specific humidity
+        os.system('wget -%s %s/pressure/shum.%s%02d.nc -P ncFiles/' % (flag,narrURL,year,month))
 
-    # get upper specific humidity
-    os.system('wget -%s %s/pressure/shum.%s%02d.nc -P ncFiles/' % (flag,narrURL,year,month))
-
+    else:
+        os.system('wget -%s %s/pressure/%s.%s%02d.nc -P ncFiles/' % (flag,narrURL,fname,year,month))

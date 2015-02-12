@@ -28,14 +28,33 @@ def writeSfcFile(fname,lat,lon,t,slp,pres,lcb,tcdc, lcdc,CLC,CLT,PWTH,vis,sfcTem
     f.close()
 
 
-def startUpperFile(fname,lat,lon,t):
-    f = open('%s.OQA' % (fname),'w')
+def writeUpperFile(fname,lat,lon,t,Z,WD,WS,T,sigmaT,sigmaW):
+    f = open('%s.PFL' % (fname),'w')
     f.write('*    AERMET Version  13350\n')
     f.write('*% UPPERAIR\n')
     f.write('*      QAOUT     UPPER.OQA\n')
     f.write('*      XDATES    %d/%d/%d TO %d/%d/%d\n' % (t.startDate.year,t.startDate.month,t.startDate.day,t.endDate.year,t.endDate.month,t.endDate.day))
     f.write('*@     LOCATION  99999   %s   %s   %d\n' % (lon,lat,0))
     f.write('*** EOH: END OF UPPERAIR QA HEADERS\n')
-
-
-    return f
+    
+    time = t.timeSpaceList()[1:]
+    for i in range(len(time)):
+        for j in range(len(Z[0])):
+            if Z[i,j] <0 or Z[i,j]>=1e4:
+                pass
+            else:
+                if j == len(Z[0])-1:
+                    top = 1
+                elif Z[i,j+1] >= 1e4:
+                    top=1
+                else:
+                    top = 0
+                date = time[i]
+                if date.hour == 0:
+                    hour = 24
+                    date = date - datetime.timedelta(hours=24)
+                else:
+                    hour=date.hour
+                    
+                f.write('%2d %2d %2d %2d %6.1f %1d %5.0f %7.2f %7.1f %6.1f %7.2f\n' % (date.year - 2000,date.month,date.day,hour,Z[i,j],top,WD[i,j],WS[i,j],T[i,j]-273.15,sigmaT[i,j],sigmaW[i,j]))
+    f.close()

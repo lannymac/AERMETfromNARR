@@ -32,7 +32,7 @@ def skyCondition(lcf,mcf,hcf):
     CLC[0,np.where(lcf < 10)] = 0
     CLC[0,np.where((lcf >= 10) & (lcf < 50))] = 2
     CLC[0,np.where((lcf >= 50) & (lcf < 90))] = 4
-    CLC[0,np.where((lcf >= 90)] = 6
+    CLC[0,np.where((lcf >= 90))] = 6
 
     # if lcf < 10.:
     #     CLC[0]=0
@@ -48,7 +48,7 @@ def skyCondition(lcf,mcf,hcf):
     CLC[1,np.where(mcf < 10)] = 0
     CLC[1,np.where((mcf >= 10) & (mcf < 50))] = 2
     CLC[1,np.where((mcf >= 50) & (mcf < 90))] = 4
-    CLC[1,np.where((mcf >= 90)] = 6
+    CLC[1,np.where((mcf >= 90))] = 6
 
     # if mcf < 10.:
     #     CLC[1]=0
@@ -64,7 +64,7 @@ def skyCondition(lcf,mcf,hcf):
     CLC[2,np.where(hcf < 10)] = 0
     CLC[2,np.where((hcf >= 10) & (hcf < 50))] = 1
     CLC[2,np.where((hcf >= 50) & (hcf < 90))] = 3
-    CLC[2,np.where((hcf >= 90)] = 5
+    CLC[2,np.where((hcf >= 90))] = 5
 
     # if hcf < 10.:
     #     CLC[2]=0

@@ -9,6 +9,7 @@ from skyCondition import *
 from cloudTypes import *
 from pwth import *
 from writeToFile import *
+from stability import *
 from dateutil.relativedelta import relativedelta
 import sys
 # Read in information from the configuration file
@@ -56,82 +57,40 @@ if doSfc:
     wetBulb = Tw(sfcTemp - 273.15, rh)
     dewPoint = Td(sfcTemp - 273.15,rh)
 
-    # SKY CONDITION
-    # CLC = np.zeros((4,len(tcdc)))
-    # CLC=np.array(CLC,dtype=str)
-    # for i in range(len(tcdc)):
-    #     tmp=skyCondition(lcdc[i],mcdc[i],hcdc[i])
-    #     if lcdc[i] < 0.:
-    #         lcdc[i] = 0.
-    #     if mcdc[i] < 0.:
-    #         mcdc[i] = 0.
-    #     if hcdc[i] < 0.:
-    #         hcdc[i] = 0.
-
-
-    #     CLC[0,i]= '0%02d%02d' % (tmp[0],lcdc[i]/10.)
-
-    #     CLC[1,i]= '0%02d%02d' % (tmp[1],mcdc[i]/10.)
-    #     CLC[2,i]= '0%02d%02d' % (tmp[2],hcdc[i]/10.)
-    #     CLC[3,i]= '00000'
-
     CLC = skyCondition(lcdc,mcdc,hcdc)
-
-
-     # FIND CLOUD IDENTIFIERS
-
-    # CLT = np.zeros((4,len(tcdc)))
-    # CLT = np.array(CLT,dtype=str)
-
-    # for i in range(len(tcdc)):
-    #     tmp=cloudTypes(lcdc[i],mcdc[i],mcdc[i])
-    #     if np.isnan(lcb[i]):
-    #         CLT[0,i] = '09999'
-    #     else:
-    #         CLT[0,i] = '0%02d%02d' % (tmp[0],lcb[i]/100.)
-    #     if np.isnan(mcb[i]):
-    #         CLT[1,i] = '09999'
-    #     else:
-    #         CLT[1,i] = '0%02d%02d' % (tmp[1],mcb[i]/100.)
-    #     if np.isnan(hcb[i]):
-    #         CLT[2,i] = '09999'
-    #     else:
-    #         CLT[2,i] = '0%02d%02d' % (tmp[2],hcb[i]/100.)
-    #     CLT[3,i] = '0%02d%02d' % (tmp[3],0.)
-
     CLT = cloudTypes(lcdc,mcdc,hcdc,lcb,mcb,hcb)
-
-    # Let's see if we can't come up with an algorithm to predict "weather"
-
-    # PWTH_file = np.zeros((len(precip)))
-    # PWTH_file = np.array(PWTH_file,dtype='str')
-
-    # for i in range(len(precip)):
-    #     tmp = pwth(precip[i],sfcTemp[i])
-    #     PWTH_file[i] = '0%02d%02d' % (tmp[0],tmp[1])
-    
     weather = pwth(precip,sfcTemp)
 
     writeSfcFile(SfcFname,lat,lon,t,slp,pres,lcb,tcdc,lcdc,CLC,CLT,weather,vis,sfcTemp,wetBulb,dewPoint,rh,windDir,windSpeed,precip)
-    end = start - time.time()
-
 
 
 
 if doUpper:
-    curr = t.startDate
-    # Download the appropriate met files
-    downloadYears = np.arange(t.startDate.year,t.endDate.year+1,1)
     
-    pres    = readSfcReanalysis('pres.sfc','pres',curr.year,lat,lon,t)
-    end = t.endDate
-    dates = [curr]
-    while curr < end:
-        downloadUpperNARR(curr.year,curr.month,flag = 'nc')
-        curr += relativedelta(months=1)
+    pres    = readSfcReanalysis('pres.sfc','pres',t.startDate.year,lat,lon,t)
 
-        f = open('%s.PFL' % (upperFname),'w')
+    T, normalPressureLevels = readUpperReanalysis('air','air',lat,lon,t,returnLevels=True)
+    TKE, tkePressureLevels = readUpperReanalysis('tke','tke',lat,lon,t,returnLevels=True)
+    tmpSigmaTheta,tmpSigmaPhi = tke2sigma(TKE)
+    sigmaTheta = np.ones(np.shape(T))*tmpSigmaTheta[:,-1][:,None]
+    sigmaTheta[:,0:15] = tmpSigmaTheta
 
-        T = readUpperReanalysis('air','air',curr,lat,lon,t)
-        f.close()
-        sys.exit()
+    sigmaPhi = np.ones(np.shape(T))*tmpSigmaPhi[:,-1][:,None]
+    sigmaPhi[:,0:15] = tmpSigmaPhi
+
+
+    V = readUpperReanalysis('vwnd','vwnd',lat,lon,t)
+    U = readUpperReanalysis('uwnd','uwnd',lat,lon,t)
+
+    windSpd = np.sqrt(U**2 + V**2)
+    windDir = np.arctan2(V,U)*180/np.pi
+    windDir = 270. - windDir
+    windDir[np.where(windDir > 360.)] -= 360.
+    windDir[np.where(windDir < 0.)] += 360.
+
+    sigmaW = windSpd*np.sin(sigmaPhi/180*np.pi)
+    
+    PRESLEVELS,SFCPRES = np.meshgrid(normalPressureLevels,pres)
+    Z = barometric(SFCPRES,PRESLEVELS*100)
+    
+    writeUpperFile(upperFname,lat,lon,t,Z,windDir,windSpd,T,sigmaTheta,sigmaW)
