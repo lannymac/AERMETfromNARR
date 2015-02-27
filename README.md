@@ -1,7 +1,7 @@
 # AERMETfromNARR
 Python script to create an AERMET file from NARR data if observations are not available.
 
-Although basic, this script will give the user a "jumping off point" for which to start an AERMOD run. An important thing to note is that AERMET is still neccesary to convert this surface observational output to an input file that AERMOD will understand.
+Although basic, this script will give the user a "jumping off point" for which to start an AERMOD run. AERMET is not neccesary to when using this script. There are still some minor issues that must be addressed.
 
 This package has some dependencies:
      - NumPy
