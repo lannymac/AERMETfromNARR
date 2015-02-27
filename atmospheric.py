@@ -39,3 +39,58 @@ def sh2rh(SH,T,pLevels):
    return RH 
 
 
+def phi_zref(zref,L):
+   mu = (1.-16.*zref/L)**(1/4.)
+   return 2*np.log((1+mu)/2.) + np.log((1+mu**2)/2) - 2*np.arctan(mu) + np.pi/2
+
+def phi_z0(z0,L):
+   mu = (1.-16.*z0/L)**(1/4.)
+   return 2*np.log((1+mu)/2.) + np.log((1+mu**2)/2) - 2*np.arctan(mu) + np.pi/2
+
+def moninObukhovLength(u,z0,rho,T,H,stability,n,zref = 2.):
+   ustarAll = np.zeros_like(u,dtype=float)
+   LAll = np.zeros_like(u,dtype=float)
+   SBL = np.zeros_like(u,dtype=float)
+   k = 0.4
+   g = 9.81
+   cp = 1005.
+   betaM = 4.7
+   for i in range(len(u)):
+      if stability[i] < 4:
+         L= [1e0,-1000]
+         iterations = 0
+         while abs(L[0]-L[1])>.0000001:
+            L[0] = L[1]
+            ustar = k*u[i]/(np.log(zref/z0[i]) - phi_zref(zref,L[0]) + phi_z0(z0[i],L[0]))
+            L[1] = -rho[i]*cp*T[i]*(ustar**3)/(k*g*H[i])
+            iterations+=1
+
+         ustarAll[i] = ustar
+         LAll[i] = L[0]
+         SBL[i] = 2300.*(ustarAll[i]**(3/2.))
+      else:
+         C_D = k/(np.log(zref/z0[i]))
+         thetastar = 0.09*(1 - 0.5*n[i]**2)
+         u0 = np.sqrt(betaM*zref*g*thetastar/T[i])
+         ustarAll[i] = C_D*u[i]/2.*(1.+np.sqrt(1. - (2*u0/(np.sqrt(C_D)*u[i]))**2))
+         LAll[i]= -rho[i]*cp*T[i]*(ustarAll[i]**3)/(k*g*H[i])
+         SBL[i] = 2300.*(ustarAll[i]**(3/2.))
+   return ustarAll,LAll, SBL
+
+def turbulentVeloctiyScale(H,rho,T):
+   g = 9.81
+   cp = 1005.
+   zic = 4000.
+   return (g*H*zic/(rho*cp*T))**(1/3.)
+
+def get_VPTG(PBL,theta,Z):
+   VPTG = np.zeros_like(PBL)
+   for i in range(len(PBL)):
+      inds = np.where(Z[i]>PBL[i])[0]
+      Znew = Z[i,inds]
+      thetaNew = theta[i,inds]
+      
+      dtdz = (thetaNew[:-1] - thetaNew[1:])/(Znew[:-1] - Znew[1:])
+      VPTG[i] = dtdz.mean()
+
+   return VPTG

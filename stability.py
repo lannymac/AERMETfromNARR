@@ -23,22 +23,63 @@ def tke2stability(TKE):
     return stability
     
 
-def tke2sigma(TKE):
-    stability = tke2stability(TKE)
+def stability2sigma(stability):
+    sigmaTheta = np.zeros_like(stability)
+    sigmaPhi = np.zeros_like(stability)
 
-    sigmaTheta = np.zeros_like(TKE)
-    sigmaPhi = np.zeros_like(TKE)
-
-    sigmaTheta[np.where(stability==7)]=np.random.rand(np.shape(np.where(stability==7))[1])*2.1
     sigmaTheta[np.where(stability==6)]=np.random.rand(np.shape(np.where(stability==6))[1])*1.7 + 2.1
-    sigmaTheta[np.where(stability==4)]=np.random.rand(np.shape(np.where(stability==4))[1])*5.0 + 7.5
+    sigmaTheta[np.where(stability==5)]=np.random.rand(np.shape(np.where(stability==5))[1])*3.7 + 3.8
+    sigmaTheta[np.where(stability==4)]=np.random.rand(np.shape(np.where(stability==4))[1])*5 + 7.5
+    sigmaTheta[np.where(stability==3)]=np.random.rand(np.shape(np.where(stability==3))[1])*5 + 12.5
     sigmaTheta[np.where(stability==2)]=np.random.rand(np.shape(np.where(stability==2))[1])*5 + 17.5
-    sigmaTheta[np.where(stability==1)]=np.random.rand(np.shape(np.where(stability==1))[1])*337.5 + 22.5
+    sigmaTheta[np.where(stability==1)]=np.random.rand(np.shape(np.where(stability==1))[1])*27.5 + 22.5
 
-    sigmaPhi[np.where(stability==7)]=np.random.rand(np.shape(np.where(stability==7))[1])*2.4
-    sigmaPhi[np.where(stability==6)]=np.random.rand(np.shape(np.where(stability==6))[1])*2.6 + 2.4
+    sigmaPhi[np.where(stability==6)]=np.random.rand(np.shape(np.where(stability==6))[1])*2.4
+    sigmaPhi[np.where(stability==5)]=np.random.rand(np.shape(np.where(stability==5))[1])*2.6 + 2.4
     sigmaPhi[np.where(stability==4)]=np.random.rand(np.shape(np.where(stability==4))[1])*2.8 + 5.0
-    sigmaPhi[np.where(stability==2)]=np.random.rand(np.shape(np.where(stability==2))[1])*2.0 + 10
-    sigmaPhi[np.where(stability==1)]=np.random.rand(np.shape(np.where(stability==1))[1])*10 + 12
+    sigmaPhi[np.where(stability==3)]=np.random.rand(np.shape(np.where(stability==3))[1])*2.2 + 7.8
+    sigmaPhi[np.where(stability==2)]=np.random.rand(np.shape(np.where(stability==2))[1])*2 + 10
+    sigmaPhi[np.where(stability==1)]=np.random.rand(np.shape(np.where(stability==1))[1])*13 + 12
 
     return sigmaTheta, sigmaPhi
+
+def pasquilStability(WS,SOLAR,tcdc):
+    stability = np.zeros_like(WS)
+    # DAYTIME
+    strongSolar = 600. # W m-2
+    moderateSolar = 300. # W m-2
+    slightSolar = 10. # W m-2
+
+    stability[np.where((SOLAR >= strongSolar) & (WS < 2.))] = 1
+    stability[np.where((SOLAR >= strongSolar) & (WS >= 2.) & (WS < 3))] = 1
+    stability[np.where((SOLAR >= strongSolar) & (WS >= 3.) & (WS < 5))] = 2
+    stability[np.where((SOLAR >= strongSolar) & (WS >= 5.) & (WS < 6))] = 3
+    stability[np.where((SOLAR >= strongSolar) & (WS > 6.))] = 3
+
+    stability[np.where((SOLAR >= moderateSolar) & (SOLAR < strongSolar) & (WS < 2.))] = 1
+    stability[np.where((SOLAR >= moderateSolar) & (SOLAR < strongSolar) & (WS >= 2.) & (WS < 3))] = 2
+    stability[np.where((SOLAR >= moderateSolar) & (SOLAR < strongSolar) & (WS >= 3.) & (WS < 5))] = 2
+    stability[np.where((SOLAR >= moderateSolar) & (SOLAR < strongSolar) & (WS >= 5.) & (WS < 6))] = 3
+    stability[np.where((SOLAR >= moderateSolar) & (SOLAR < strongSolar) & (WS > 6.))] = 4
+
+    stability[np.where((SOLAR >= slightSolar) & (SOLAR < moderateSolar) & (WS < 2.))] = 2
+    stability[np.where((SOLAR >= slightSolar) & (SOLAR < moderateSolar) & (WS >= 2.) & (WS < 3))] = 3
+    stability[np.where((SOLAR >= slightSolar) & (SOLAR < moderateSolar) & (WS >= 3.) & (WS < 5))] = 3
+    stability[np.where((SOLAR >= slightSolar) & (SOLAR < moderateSolar) & (WS >= 5.) & (WS < 6))] = 4
+    stability[np.where((SOLAR >= slightSolar) & (SOLAR < moderateSolar) & (WS > 6.))] = 4
+
+    
+
+    stability[np.where((SOLAR < slightSolar) & (tcdc >= 50) & (WS < 2.))] = 5
+    stability[np.where((SOLAR < slightSolar) & (tcdc >= 50) & (WS >= 2.) & (WS < 3.))] = 5
+    stability[np.where((SOLAR < slightSolar) & (tcdc >= 50) & (WS >= 3.) & (WS < 5.))] = 4
+    stability[np.where((SOLAR < slightSolar) & (tcdc >= 50) & (WS >= 5.) & (WS < 6.))] = 4
+    stability[np.where((SOLAR < slightSolar) & (tcdc >= 50) & (WS >= 6.))] = 4
+
+    stability[np.where((SOLAR < slightSolar) & (tcdc < 50) & (WS < 2.))] = 6
+    stability[np.where((SOLAR < slightSolar) & (tcdc < 50) & (WS >= 2.) & (WS < 3.))] = 6
+    stability[np.where((SOLAR < slightSolar) & (tcdc < 50) & (WS >= 3.) & (WS < 5.))] = 5
+    stability[np.where((SOLAR < slightSolar) & (tcdc < 50) & (WS >= 5.) & (WS < 6.))] = 4
+    stability[np.where((SOLAR < slightSolar) & (tcdc < 50) & (WS >= 6.))] = 4
+
+    return stability

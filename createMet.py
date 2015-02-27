@@ -18,66 +18,66 @@ doSfc, SfcFname, doUpper, upperFname = readAERMODConfig('met.cfg')
 
 if doSfc:
     # Download the appropriate met files
-    downloadYears = np.arange(t.startDate.year,t.endDate.year+1,1)
+    # downloadYears = np.arange(t.startDate.year,t.endDate.year+1,1)
 
-    for year in downloadYears:
-        downloadSfcNARR(year)
+    # for year in downloadYears:
+    H    = readSfcReanalysis('shtfl','shtfl',lat,lon,t)
+    PBL    = readSfcReanalysis('hpbl','hpbl',lat,lon,t)
+    latent = readSfcReanalysis('lhtfl','lhtfl',lat,lon,t)
+    B = H/latent
+    albedo = readSfcReanalysis('albedo','albedo',lat,lon,t)
+    u       = readSfcReanalysis('uwnd.10m','uwnd',lat,lon,t)
+    v       = readSfcReanalysis('vwnd.10m','vwnd',lat,lon,t)
+    ws = np.sqrt(u**2+v**2)
+    sfcTemp = readSfcReanalysis('air.sfc','air',lat,lon,t)
+    tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t)
+    dswrf = readSfcReanalysis('dswrf','dswrf',lat,lon,t,)    
+    pres    = readSfcReanalysis('pres.sfc','pres',lat,lon,t)
+    prate   = readSfcReanalysis('prate','prate',lat,lon,t)*3600.
+    crain = np.array(np.round(readSfcReanalysis('crain','crain',lat,lon,t)),dtype=int)
+    csnow = np.array(np.round(readSfcReanalysis('csnow','csnow',lat,lon,t)),dtype=int)
+    rh = readSfcReanalysis('rhum.2m','rhum',lat,lon,t)
+    tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t)
 
-        slp     = readSfcReanalysis('prmsl','prmsl',year,lat,lon,t)
-        pres    = readSfcReanalysis('pres.sfc','pres',year,lat,lon,t)
-        lcb     = readSfcReanalysis('pres.lcb.gauss','pres',year,lat,lon,t)
-        mcb     = readSfcReanalysis('pres.mcb.gauss','pres',year,lat,lon,t)
-        hcb     = readSfcReanalysis('pres.mcb.gauss','pres',year,lat,lon,t)
-        precip  = readSfcReanalysis('prate','prate',year,lat,lon,t)
-        tcdc    = readSfcReanalysis('tcdc','tcdc',year,lat,lon,t)
-        lcdc    = readSfcReanalysis('lcdc','lcdc',year,lat,lon,t)
-        mcdc    = readSfcReanalysis('mcdc','mcdc',year,lat,lon,t)
-        hcdc    = readSfcReanalysis('hcdc','hcdc',year,lat,lon,t)
-        sfcTemp = readSfcReanalysis('air.sfc','air',year,lat,lon,t)
-        rh      = readSfcReanalysis('rhum.2m','rhum',year,lat,lon,t)
-        u       = readSfcReanalysis('uwnd.10m','uwnd',year,lat,lon,t)
-        v       = readSfcReanalysis('vwnd.10m','vwnd',year,lat,lon,t)
-        vis     = readSfcReanalysis('vis','vis',year,lat,lon,t)
 
-    precip[np.where(precip < 0)] = 0.
-    precip *= (1*3600)
-    #precip[np.where(precip < 1e-1)]=0
+    R = 287.058
+    rho = np.ones_like(sfcTemp)
+    z0 = readRoughnessLength(lat,lon,t)
+    # ustar,L = moninObukhovLength(ws,z0,rho,sfcTemp,H)
+    stability = pasquilStability(ws,dswrf,tcdc)
+    ustar, L, SBL = moninObukhovLength(ws,z0,rho,sfcTemp,H,stability,tcdc/100.)
+    wstar = turbulentVeloctiyScale(H,rho,sfcTemp)
 
-    windSpeed = np.sqrt(u**2 + v**2)
+    T, normalPressureLevels = readUpperReanalysis('air','air',lat,lon,t,returnLevels=True)
+
+    PRESLEVELS,SFCPRES = np.meshgrid(normalPressureLevels,pres)
+    Z = barometric(SFCPRES,PRESLEVELS*100)
+    p0 = 100000. # Pa
+    theta = T*(p0/pres[:,np.newaxis])**(.286) 
+    VPTG = get_VPTG(PBL,theta,Z)
+
     windDir   = np.arctan2(v,u) *180/np.pi
     #convert direction to degreed FROM north
-
     windDir = 270 - windDir
     windDir[np.where(windDir > 360.)] = windDir[np.where(windDir > 360)] - 360
     windDir[np.where(windDir < 0.)] = windDir[np.where(windDir < 0.)] + 360
 
-    lcb = barometric(slp,lcb)
-    mcb = barometric(slp,mcb)
-    hcb = barometric(slp,hcb)
-    wetBulb = Tw(sfcTemp - 273.15, rh)
-    dewPoint = Td(sfcTemp - 273.15,rh)
-
-    CLC = skyCondition(lcdc,mcdc,hcdc)
-    CLT = cloudTypes(lcdc,mcdc,hcdc,lcb,mcb,hcb)
-    weather = pwth(precip,sfcTemp)
-
-    writeSfcFile(SfcFname,lat,lon,t,slp,pres,lcb,tcdc,lcdc,CLC,CLT,weather,vis,sfcTemp,wetBulb,dewPoint,rh,windDir,windSpeed,precip)
-
+    writeSfcFile(SfcFname,lat,lon,t,H,ustar,wstar,VPTG,PBL,SBL,L,z0,B,albedo,ws,windDir,sfcTemp,prate,rh,pres,tcdc,crain,csnow)
 
 
 if doUpper:
     
-    pres    = readSfcReanalysis('pres.sfc','pres',t.startDate.year,lat,lon,t)
+    pres    = readSfcReanalysis('pres.sfc','pres',lat,lon,t)
 
     T, normalPressureLevels = readUpperReanalysis('air','air',lat,lon,t,returnLevels=True)
-    TKE, tkePressureLevels = readUpperReanalysis('tke','tke',lat,lon,t,returnLevels=True)
-    tmpSigmaTheta,tmpSigmaPhi = tke2sigma(TKE)
-    sigmaTheta = np.ones(np.shape(T))*tmpSigmaTheta[:,-1][:,None]
-    sigmaTheta[:,0:15] = tmpSigmaTheta
 
-    sigmaPhi = np.ones(np.shape(T))*tmpSigmaPhi[:,-1][:,None]
-    sigmaPhi[:,0:15] = tmpSigmaPhi
+    u = readSfcReanalysis('uwnd.10m','uwnd',lat,lon,t)    
+    v = readSfcReanalysis('vwnd.10m','vwnd',lat,lon,t)    
+    dswrf = readSfcReanalysis('dswrf','dswrf',lat,lon,t)
+    tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t)
+    WS = np.sqrt(u**2+v**2)
 
+    sigmaTheta,sigmaPhi = stability2sigma(pasquilStability(WS,dswrf,tcdc))
 
     V = readUpperReanalysis('vwnd','vwnd',lat,lon,t)
     U = readUpperReanalysis('uwnd','uwnd',lat,lon,t)
@@ -88,9 +88,10 @@ if doUpper:
     windDir[np.where(windDir > 360.)] -= 360.
     windDir[np.where(windDir < 0.)] += 360.
 
-    sigmaW = windSpd*np.sin(sigmaPhi/180*np.pi)
+    sigmaW = windSpd*np.sin(sigmaPhi[:,np.newaxis]/180*np.pi)
     
     PRESLEVELS,SFCPRES = np.meshgrid(normalPressureLevels,pres)
     Z = barometric(SFCPRES,PRESLEVELS*100)
     
+    sigmaTheta = np.ones_like(T)*sigmaTheta[:,np.newaxis]
     writeUpperFile(upperFname,lat,lon,t,Z,windDir,windSpd,T,sigmaTheta,sigmaW)
