@@ -9,3 +9,5 @@ This package has some dependencies:
      - wget (Unix)
      - Datetime
      - SciPy
+
+TO RUN: Edit met.cfg to your liking and run "createMet.py"
