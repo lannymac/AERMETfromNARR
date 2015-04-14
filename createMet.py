@@ -13,7 +13,7 @@ from stability import *
 from dateutil.relativedelta import relativedelta
 import sys
 # Read in information from the configuration file
-lat,lon,t = readSiteConfig('met.cfg')
+lat,lon,t,timeZone = readSiteConfig('met.cfg')
 doSfc, SfcFname, doUpper, upperFname = readAERMODConfig('met.cfg')
 
 if doSfc:
@@ -21,34 +21,34 @@ if doSfc:
     # downloadYears = np.arange(t.startDate.year,t.endDate.year+1,1)
 
     # for year in downloadYears:
-    H    = readSfcReanalysis('shtfl','shtfl',lat,lon,t)
-    PBL    = readSfcReanalysis('hpbl','hpbl',lat,lon,t)
-    latent = readSfcReanalysis('lhtfl','lhtfl',lat,lon,t)
+    H    = readSfcReanalysis('shtfl','shtfl',lat,lon,t,timeZone)
+    PBL    = readSfcReanalysis('hpbl','hpbl',lat,lon,t,timeZone)
+    latent = readSfcReanalysis('lhtfl','lhtfl',lat,lon,t,timeZone)
     B = H/latent
-    albedo = readSfcReanalysis('albedo','albedo',lat,lon,t)
-    u       = readSfcReanalysis('uwnd.10m','uwnd',lat,lon,t)
-    v       = readSfcReanalysis('vwnd.10m','vwnd',lat,lon,t)
+    albedo = readSfcReanalysis('albedo','albedo',lat,lon,t,timeZone)
+    u       = readSfcReanalysis('uwnd.10m','uwnd',lat,lon,t,timeZone)
+    v       = readSfcReanalysis('vwnd.10m','vwnd',lat,lon,t,timeZone)
     ws = np.sqrt(u**2+v**2)
-    sfcTemp = readSfcReanalysis('air.sfc','air',lat,lon,t)
-    tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t)
-    dswrf = readSfcReanalysis('dswrf','dswrf',lat,lon,t,)    
-    pres    = readSfcReanalysis('pres.sfc','pres',lat,lon,t)
-    prate   = readSfcReanalysis('prate','prate',lat,lon,t)*3600.
-    crain = np.array(np.round(readSfcReanalysis('crain','crain',lat,lon,t)),dtype=int)
-    csnow = np.array(np.round(readSfcReanalysis('csnow','csnow',lat,lon,t)),dtype=int)
-    rh = readSfcReanalysis('rhum.2m','rhum',lat,lon,t)
-    tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t)
+    sfcTemp = readSfcReanalysis('air.sfc','air',lat,lon,t,timeZone)
+    tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t,timeZone)
+    dswrf = readSfcReanalysis('dswrf','dswrf',lat,lon,t,timeZone)    
+    pres    = readSfcReanalysis('pres.sfc','pres',lat,lon,t,timeZone)
+    prate   = readSfcReanalysis('prate','prate',lat,lon,t,timeZone)*3600.
+    crain = np.array(np.round(readSfcReanalysis('crain','crain',lat,lon,t,timeZone)),dtype=int)
+    csnow = np.array(np.round(readSfcReanalysis('csnow','csnow',lat,lon,t,timeZone)),dtype=int)
+    rh = readSfcReanalysis('rhum.2m','rhum',lat,lon,t,timeZone)
+    #tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t,timeZone)
 
 
     R = 287.058
     rho = np.ones_like(sfcTemp)
-    z0 = readRoughnessLength(lat,lon,t)
+    z0 = readRoughnessLength(lat,lon,t,timeZone)
     # ustar,L = moninObukhovLength(ws,z0,rho,sfcTemp,H)
     stability = pasquilStability(ws,dswrf,tcdc)
     ustar, L, SBL = moninObukhovLength(ws,z0,rho,sfcTemp,H,stability,tcdc/100.)
-    wstar = turbulentVeloctiyScale(H,rho,sfcTemp)
+    wstar = turbulentVeloctiyScale(H,rho,sfcTemp,PBL)
 
-    T, normalPressureLevels = readUpperReanalysis('air','air',lat,lon,t,returnLevels=True)
+    T, normalPressureLevels = readUpperReanalysis('air','air',lat,lon,t,timeZone,returnLevels=True)
 
     PRESLEVELS,SFCPRES = np.meshgrid(normalPressureLevels,pres)
     Z = barometric(SFCPRES,PRESLEVELS*100)
@@ -67,20 +67,20 @@ if doSfc:
 
 if doUpper:
     
-    pres    = readSfcReanalysis('pres.sfc','pres',lat,lon,t)
+    pres    = readSfcReanalysis('pres.sfc','pres',lat,lon,t,timeZone)
 
-    T, normalPressureLevels = readUpperReanalysis('air','air',lat,lon,t,returnLevels=True)
+    T, normalPressureLevels = readUpperReanalysis('air','air',lat,lon,t,timeZone,returnLevels=True)
 
-    u = readSfcReanalysis('uwnd.10m','uwnd',lat,lon,t)    
-    v = readSfcReanalysis('vwnd.10m','vwnd',lat,lon,t)    
-    dswrf = readSfcReanalysis('dswrf','dswrf',lat,lon,t)
-    tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t)
+    u = readSfcReanalysis('uwnd.10m','uwnd',lat,lon,t,timeZone)    
+    v = readSfcReanalysis('vwnd.10m','vwnd',lat,lon,t,timeZone)    
+    dswrf = readSfcReanalysis('dswrf','dswrf',lat,lon,t,timeZone)
+    tcdc = readSfcReanalysis('tcdc','tcdc',lat,lon,t,timeZone)
     WS = np.sqrt(u**2+v**2)
 
     sigmaTheta,sigmaPhi = stability2sigma(pasquilStability(WS,dswrf,tcdc))
 
-    V = readUpperReanalysis('vwnd','vwnd',lat,lon,t)
-    U = readUpperReanalysis('uwnd','uwnd',lat,lon,t)
+    V = readUpperReanalysis('vwnd','vwnd',lat,lon,t,timeZone)
+    U = readUpperReanalysis('uwnd','uwnd',lat,lon,t,timeZone)
 
     windSpd = np.sqrt(U**2 + V**2)
     windDir = np.arctan2(V,U)*180/np.pi

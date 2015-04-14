@@ -51,8 +51,8 @@ def meshgridLambertConformal(arr,startDim):
    return arr2
 
 
-def readSfcReanalysis(fname,keyword,lat,lon,t,folder='monolevel',URL='ftp://ftp.cdc.noaa.gov/Datasets/NARR'):
-   months, years = t.monthsYears(surround=True)
+def readSfcReanalysis(fname,keyword,lat,lon,t,timeZone,folder='monolevel',URL='ftp://ftp.cdc.noaa.gov/Datasets/NARR'):
+   months, years = t.monthsYears(surround=False)
    years = np.unique(years)
    for k in range(len(years)):
       downloadSfcNARR(years[k],flag = 'nc',fname=fname,folder=folder,URL=URL)
@@ -61,7 +61,11 @@ def readSfcReanalysis(fname,keyword,lat,lon,t,folder='monolevel',URL='ftp://ftp.
       ncTime=infile.variables["time"][:]
       ncLat=infile.variables["lat"][:]
       ncLon=infile.variables["lon"][:]
-      ncKeyword=infile.variables[keyword][:]
+      
+      if fname=='gflux':
+         ncKeyword=infile.variables[keyword][:]*-1
+      else:
+         ncKeyword=infile.variables[keyword][:]
       infile.close()
 
 
@@ -120,19 +124,19 @@ def readSfcReanalysis(fname,keyword,lat,lon,t,folder='monolevel',URL='ftp://ftp.
 
 
    if ncTime[0] < 1e7:
-      tWanted = t.hoursSince1800()
+      tWanted = t.hoursSince1800(timeZone=timeZone)
    else:
-      tWanted = t.hoursSince0001()
+      tWanted = t.hoursSince0001(timeZone=timeZone)
 
-   f2 = interp1d(ncAllTimes,data,kind='nearest')
+   f2 = interp1d(ncAllTimes,data,kind='nearest',bounds_error=False)
    del ncKeyword, ncTime,ncLat,ncLon
    ncKeywordFuncTime=f2(tWanted)
    return ncKeywordFuncTime
 
 
 
-def readUpperReanalysis(fname,keyword,lat,lon,t,returnLevels=False):
-   months,years = t.monthsYears(surround=True)
+def readUpperReanalysis(fname,keyword,lat,lon,t,timeZone,returnLevels=False):
+   months,years = t.monthsYears(surround=False)
 
    for k in range(len(months)):
       downloadUpperNARR(years[k],months[k],flag = 'nc',fname=fname)
@@ -167,9 +171,9 @@ def readUpperReanalysis(fname,keyword,lat,lon,t,returnLevels=False):
          ncAllTimes = np.concatenate((ncAllTimes,ncTime))
 
    if ncAllTimes[0] < 1e7:
-      tWanted = t.hoursSince1800()
+      tWanted = t.hoursSince1800(timeZone=timeZone)
    else:
-      tWanted = t.hoursSince0001()
+      tWanted = t.hoursSince0001(timeZone=timeZone)
 
    LEVELS,TIME = np.meshgrid(ncLevels,ncAllTimes)
    f2 = LinearNDInterpolator((LEVELS.flatten(),TIME.flatten()),data.flatten())
@@ -184,7 +188,7 @@ def readUpperReanalysis(fname,keyword,lat,lon,t,returnLevels=False):
       return ncKeywordFuncTime
 
 
-def readRoughnessLength(lat,lon,t):
+def readRoughnessLength(lat,lon,t,timeZone):
    files = glob('ncFiles/z0/*.nc')
    lon += 360
    for i in range(len(files)):
@@ -208,7 +212,8 @@ def readRoughnessLength(lat,lon,t):
       infile.close()
    z0 = np.array(z0)
    dt = np.array(dt)   
-   tWanted = t.timeSpaceList()
+
+   tWanted = t.timeSpaceList(timeZone=timeZone)
    tMonths = np.zeros((len(tWanted)))
    for i in range(len(tWanted)):
       tMonths[i] = tWanted[i].month

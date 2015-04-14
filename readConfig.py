@@ -11,8 +11,8 @@ def readSiteConfig(fname):
     endDate = datetime.datetime.strptime(Config.get("site","endDate"), '%Y-%m-%d %H:%M:%S')
 
     t = reanalysisTime(startDate,endDate)
-
-    return lat,lon,t
+    timeZone = Config.getint("site","timeZone")
+    return lat,lon,t,timeZone
 
 
 def readAERMODConfig(fname):

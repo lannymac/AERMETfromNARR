@@ -1,5 +1,5 @@
 import numpy as np
-
+from scipy.stats import linregress
 def barometric(p0,pz):
    H = 7400. #m
    return -np.log(pz/p0)*H
@@ -77,10 +77,10 @@ def moninObukhovLength(u,z0,rho,T,H,stability,n,zref = 2.):
          SBL[i] = 2300.*(ustarAll[i]**(3/2.))
    return ustarAll,LAll, SBL
 
-def turbulentVeloctiyScale(H,rho,T):
+def turbulentVeloctiyScale(H,rho,T,PBL):
    g = 9.81
    cp = 1005.
-   zic = 4000.
+   zic = PBL
    return (g*H*zic/(rho*cp*T))**(1/3.)
 
 def get_VPTG(PBL,theta,Z):
@@ -90,7 +90,7 @@ def get_VPTG(PBL,theta,Z):
       Znew = Z[i,inds]
       thetaNew = theta[i,inds]
       
-      dtdz = (thetaNew[:-1] - thetaNew[1:])/(Znew[:-1] - Znew[1:])
-      VPTG[i] = dtdz.mean()
+      dtdz, = linregress(Znew,thetaNew)
+      VPTG[i] = dtdz
 
    return VPTG
